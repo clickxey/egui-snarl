@@ -532,6 +532,17 @@ pub struct SnarlStyle {
     /// If set to false, nodes intersecting with selection rect will be selected.
     pub select_rect_contained: Option<bool>,
 
+    /// Flag to control how clicking nodes changes the selection.
+    /// If set to true, a click selects only the clicked node, Shift+click or
+    /// Command+click adds or removes it, clicking the background clears the
+    /// selection, and dragging an unselected node selects it.
+    /// If set to false, only Shift+click selects and Command+click deselects.
+    #[cfg_attr(
+        feature = "serde",
+        serde(skip_serializing_if = "Option::is_none", default)
+    )]
+    pub click_selects: Option<bool>,
+
     /// Style for node selection.
     #[cfg_attr(
         feature = "serde",
@@ -679,6 +690,10 @@ impl SnarlStyle {
         self.select_rect_contained.unwrap_or(false)
     }
 
+    fn get_click_selects(&self) -> bool {
+        self.click_selects.unwrap_or(false)
+    }
+
     fn get_select_style(&self, style: &Style) -> SelectionStyle {
         self.select_style.unwrap_or_else(|| SelectionStyle {
             margin: style.spacing.window_margin,
@@ -778,6 +793,7 @@ impl SnarlStyle {
             select_stoke: None,
             select_fill: None,
             select_rect_contained: None,
+            click_selects: None,
             select_style: None,
             crisp_magnified_text: None,
             wire_smoothness: None,
@@ -1238,7 +1254,9 @@ where
         snarl_state.look_at(nodes_bb, ui_rect, min_scale, max_scale);
     }
 
-    if modifiers.command && snarl_resp.clicked_by(PointerButton::Primary) {
+    if (modifiers.command || (style.get_click_selects() && !modifiers.shift))
+        && snarl_resp.clicked_by(PointerButton::Primary)
+    {
         snarl_state.deselect_all_nodes();
     }
 
@@ -1325,6 +1343,9 @@ where
         }
     }
 
+    // The wire being dragged is drawn above the nodes, whatever the wire
+    // layer, so it never disappears behind a node it passes over.
+    let mut new_wire_shapes = Vec::new();
     match snarl_state.new_wires() {
         None => {}
         Some(NewWires::In(in_pins)) => {
@@ -1335,7 +1356,7 @@ where
                 draw_wire(
                     &ui,
                     WireId::NewInput { snarl_id, in_pin },
-                    &mut wire_shapes,
+                    &mut new_wire_shapes,
                     wire_frame_size,
                     style.get_upscale_wire_frame(),
                     style.get_downscale_wire_frame(),
@@ -1355,7 +1376,7 @@ where
                 draw_wire(
                     &ui,
                     WireId::NewOutput { snarl_id, out_pin },
-                    &mut wire_shapes,
+                    &mut new_wire_shapes,
                     wire_frame_size,
                     style.get_upscale_wire_frame(),
                     style.get_downscale_wire_frame(),
@@ -1376,6 +1397,9 @@ where
         Some(idx) => {
             ui.painter().set(idx, Shape::Vec(wire_shapes));
         }
+    }
+    if !new_wire_shapes.is_empty() {
+        ui.painter().add(Shape::Vec(new_wire_shapes));
     }
 
     ui.advance_cursor_after_rect(Rect::from_min_size(snarl_resp.rect.min, Vec2::ZERO));
@@ -1903,7 +1927,23 @@ where
         node_moved = Some((node, r.drag_delta()));
     }
 
-    if r.clicked_by(PointerButton::Primary) || r.dragged_by(PointerButton::Primary) {
+    if style.get_click_selects() {
+        let toggle = modifiers.shift || modifiers.command;
+        let selected = snarl_state.selected_nodes().contains(&node);
+        if r.clicked_by(PointerButton::Primary) {
+            if !toggle {
+                snarl_state.select_one_node(true, node);
+            } else if selected {
+                snarl_state.deselect_one_node(node);
+            } else {
+                snarl_state.select_one_node(false, node);
+            }
+        } else if r.drag_started_by(PointerButton::Primary) && !toggle && !selected {
+            // Dragging a selected node moves the whole selection; dragging
+            // another one selects it instead.
+            snarl_state.select_one_node(true, node);
+        }
+    } else if r.clicked_by(PointerButton::Primary) || r.dragged_by(PointerButton::Primary) {
         if modifiers.shift {
             snarl_state.select_one_node(modifiers.command, node);
         } else if modifiers.command {
