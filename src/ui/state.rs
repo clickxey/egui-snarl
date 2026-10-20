@@ -622,3 +622,13 @@ pub fn get_selected_nodes(id: Id, ctx: &Context) -> Vec<NodeId> {
     ctx.data(|d| d.get_temp::<SelectedNodes>(id).unwrap_or_default().0)
         .into_vec()
 }
+
+/// Replaces the selection of the `SnarlWidget` with this ID, for example to
+/// select nodes the app just added. Takes effect on the widget's next `show`;
+/// ids of nodes that don't exist are ignored.
+///
+/// Only works if [`SnarlWidget::id`] was used.
+#[inline]
+pub fn set_selected_nodes(id: Id, ctx: &Context, nodes: impl IntoIterator<Item = NodeId>) {
+    SelectedNodes(nodes.into_iter().collect()).save(ctx, id);
+}
