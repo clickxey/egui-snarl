@@ -1430,6 +1430,8 @@ fn draw_inputs<T, V>(
 where
     V: SnarlViewer<T>,
 {
+    // Unique per node (the node ui is built with the node's id).
+    let pin_id_base = node_ui.id();
     let mut drag_released = false;
     let mut pin_hovered = None;
 
@@ -1487,7 +1489,14 @@ where
             // Interact with pin shape.
             pin_ui.set_clip_rect(snarl_clip_rect);
 
-            let r = pin_ui.interact(pin_rect, pin_ui.next_auto_id(), Sense::click_and_drag());
+            // Derived from the node and pin index rather than the row's next
+            // auto id, so the pin keeps its interaction (e.g. an ongoing drag)
+            // when the widgets shown next to it change.
+            let r = pin_ui.interact(
+                pin_rect,
+                pin_id_base.with(("snarl-in-pin", in_pin.id.input)),
+                Sense::click_and_drag(),
+            );
 
             pin_ui.skip_ahead_auto_ids(1);
 
@@ -1589,6 +1598,8 @@ fn draw_outputs<T, V>(
 where
     V: SnarlViewer<T>,
 {
+    // Unique per node (the node ui is built with the node's id).
+    let pin_id_base = node_ui.id();
     let mut drag_released = false;
     let mut pin_hovered = None;
 
@@ -1646,7 +1657,14 @@ where
 
             pin_ui.set_clip_rect(snarl_clip_rect);
 
-            let r = pin_ui.interact(pin_rect, pin_ui.next_auto_id(), Sense::click_and_drag());
+            // Derived from the node and pin index rather than the row's next
+            // auto id, so the pin keeps its interaction (e.g. an ongoing drag)
+            // when the widgets shown next to it change.
+            let r = pin_ui.interact(
+                pin_rect,
+                pin_id_base.with(("snarl-out-pin", out_pin.id.output)),
+                Sense::click_and_drag(),
+            );
 
             pin_ui.skip_ahead_auto_ids(1);
 
