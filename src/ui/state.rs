@@ -651,3 +651,27 @@ pub(crate) fn take_fit_request(id: Id, ctx: &Context) -> Option<f32> {
 fn fit_request_id(id: Id) -> Id {
     id.with("snarl-fit-request")
 }
+
+/// The wire under the pointer in the `SnarlWidget` with this ID during its
+/// last `show`, if any (none while a new wire is being dragged). Lets an
+/// app show what flows through a wire, e.g. in a tooltip.
+///
+/// Only works if [`SnarlWidget::id`] was used.
+#[must_use]
+#[inline]
+pub fn get_hovered_wire(id: Id, ctx: &Context) -> Option<(OutPinId, InPinId)> {
+    ctx.data(|d| d.get_temp(hovered_wire_id(id)))
+}
+
+pub(crate) fn set_hovered_wire(id: Id, ctx: &Context, wire: Option<(OutPinId, InPinId)>) {
+    ctx.data_mut(|d| match wire {
+        Some(w) => {
+            d.insert_temp(hovered_wire_id(id), w);
+        }
+        None => d.remove::<(OutPinId, InPinId)>(hovered_wire_id(id)),
+    });
+}
+
+fn hovered_wire_id(id: Id) -> Id {
+    id.with("snarl-hovered-wire")
+}

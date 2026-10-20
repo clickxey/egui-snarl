@@ -34,7 +34,7 @@ use self::{
 pub use self::{
     background_pattern::{BackgroundPattern, Grid},
     pin::{AnyPins, PinInfo, PinShape, PinWireInfo, SnarlPin},
-    state::{fit_all_nodes, get_selected_nodes, set_selected_nodes},
+    state::{fit_all_nodes, get_hovered_wire, get_selected_nodes, set_selected_nodes},
     viewer::SnarlViewer,
     wire::{WireLayer, WireStyle},
 };
@@ -1200,6 +1200,12 @@ where
             pick_wire_style(from_r.wire_style, to_r.wire_style),
         );
     }
+
+    state::set_hovered_wire(
+        snarl_id,
+        ui.ctx(),
+        hovered_wire.map(|w| (w.out_pin, w.in_pin)),
+    );
 
     // Remove hovered wire by second click
     if hovered_wire_disconnect && let Some(wire) = hovered_wire {
