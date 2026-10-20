@@ -34,7 +34,7 @@ use self::{
 pub use self::{
     background_pattern::{BackgroundPattern, Grid},
     pin::{AnyPins, PinInfo, PinShape, PinWireInfo, SnarlPin},
-    state::{get_selected_nodes, set_selected_nodes},
+    state::{fit_all_nodes, get_selected_nodes, set_selected_nodes},
     viewer::SnarlViewer,
     wire::{WireLayer, WireStyle},
 };
@@ -1252,6 +1252,15 @@ where
     if style.get_centering() && snarl_resp.double_clicked() && nodes_bb.is_finite() {
         let nodes_bb = nodes_bb.expand(100.0);
         snarl_state.look_at(nodes_bb, ui_rect, min_scale, max_scale);
+    }
+
+    // The same, when the app asked for it with `fit_all_nodes`.
+    if let Some(fit_max_scale) = state::take_fit_request(snarl_id, ui.ctx())
+        && nodes_bb.is_finite()
+    {
+        let nodes_bb = nodes_bb.expand(100.0);
+        let cap = fit_max_scale.clamp(min_scale, max_scale);
+        snarl_state.look_at(nodes_bb, ui_rect, min_scale, cap);
     }
 
     if (modifiers.command || (style.get_click_selects() && !modifiers.shift))

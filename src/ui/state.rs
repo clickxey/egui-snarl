@@ -632,3 +632,22 @@ pub fn get_selected_nodes(id: Id, ctx: &Context) -> Vec<NodeId> {
 pub fn set_selected_nodes(id: Id, ctx: &Context, nodes: impl IntoIterator<Item = NodeId>) {
     SelectedNodes(nodes.into_iter().collect()).save(ctx, id);
 }
+
+/// Fits the view of the `SnarlWidget` with this ID around all its nodes on
+/// its next `show`, as double-clicking the background does, but zooming in
+/// no further than `max_scale` (e.g. `1.0` to never magnify a small graph).
+///
+/// Only works if [`SnarlWidget::id`] was used.
+#[inline]
+pub fn fit_all_nodes(id: Id, ctx: &Context, max_scale: f32) {
+    ctx.data_mut(|d| d.insert_temp(fit_request_id(id), max_scale));
+}
+
+/// The pending [`fit_all_nodes`] request, if any, consumed.
+pub(crate) fn take_fit_request(id: Id, ctx: &Context) -> Option<f32> {
+    ctx.data_mut(|d| d.remove_temp::<f32>(fit_request_id(id)))
+}
+
+fn fit_request_id(id: Id) -> Id {
+    id.with("snarl-fit-request")
+}
