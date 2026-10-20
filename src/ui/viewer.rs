@@ -296,6 +296,20 @@ pub trait SnarlViewer<T> {
         snarl.connect(from.id, to.id);
     }
 
+    /// Called when the user starts dragging from an input pin that already
+    /// has wires, without modifiers. Returning `true` picks those wires up:
+    /// they are disconnected from the pin (via [`SnarlViewer::drop_inputs`])
+    /// and follow the pointer, ready to be dropped on another input pin, as
+    /// in Blender's node editors.
+    ///
+    /// Returning `false` (the default) starts a new wire from the input pin.
+    /// Picking wires up is also always available with Ctrl/Cmd+drag.
+    #[inline]
+    fn pick_up_input_wires(&mut self, pin: &InPin, snarl: &mut Snarl<T>) -> bool {
+        let _ = (pin, snarl);
+        false
+    }
+
     /// Asks the viewer to disconnect two pins.
     #[inline]
     fn disconnect(&mut self, from: &OutPin, to: &InPin, snarl: &mut Snarl<T>) {

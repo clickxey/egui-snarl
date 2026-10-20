@@ -1521,6 +1521,15 @@ where
                             return;
                         }
                     }
+                } else if !in_pin.remotes.is_empty() && viewer.pick_up_input_wires(in_pin, snarl) {
+                    // Pick the existing wires up so they can be moved to
+                    // another input pin.
+                    snarl_state.start_new_wires_out(&in_pin.remotes);
+                    viewer.drop_inputs(in_pin, snarl);
+                    if !snarl.nodes.contains(node.0) {
+                        // If removed
+                        return;
+                    }
                 } else {
                     snarl_state.start_new_wire_in(in_pin.id);
                 }
