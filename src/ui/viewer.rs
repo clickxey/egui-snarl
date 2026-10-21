@@ -334,6 +334,26 @@ pub trait SnarlViewer<T> {
         snarl.drop_inputs(pin.id);
     }
 
+    /// Shows widgets on the canvas, behind the nodes: called right after
+    /// [`Self::draw_background`], with a [`Ui`] in graph space.
+    ///
+    /// Widgets added here get pointer input before the canvas (so dragging
+    /// one doesn't pan the view) but after nodes and wires, which are drawn
+    /// and interacted with on top. Useful for frames or comments that group
+    /// nodes. Does nothing by default.
+    #[inline]
+    fn background_ui(&mut self, ui: &mut Ui, snarl: &mut Snarl<T>) {
+        let _ = (ui, snarl);
+    }
+
+    /// Whether the node's header shows the collapse button. Defaults to
+    /// `true`; the style's `collapsible` turns the button off for all nodes.
+    #[inline]
+    fn is_collapsible(&mut self, node: &T) -> bool {
+        let _ = node;
+        true
+    }
+
     /// Draws background of the snarl view.
     ///
     /// By default it draws the background pattern using [`BackgroundPattern::draw`].

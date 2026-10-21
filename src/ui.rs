@@ -1043,6 +1043,7 @@ where
         ui.painter(),
         snarl,
     );
+    viewer.background_ui(&mut ui, snarl);
 
     let mut node_moved = None;
     let mut node_to_top = None;
@@ -2499,7 +2500,7 @@ where
 
         header_frame.show(header_ui, |ui: &mut Ui| {
             ui.with_layout(Layout::left_to_right(Align::Min), |ui| {
-                if style.get_collapsible() {
+                if style.get_collapsible() && viewer.is_collapsible(&snarl[node]) {
                     let (_, r) = ui.allocate_exact_size(
                         vec2(ui.spacing().icon_width, ui.spacing().icon_width),
                         Sense::click(),
