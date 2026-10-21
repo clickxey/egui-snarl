@@ -833,6 +833,7 @@ struct PinResponse {
     pos: Pos2,
     wire_color: Color32,
     wire_style: WireStyle,
+    wire_dashed: bool,
 }
 
 /// Widget to display [`Snarl`] graph in [`Ui`].
@@ -1198,6 +1199,7 @@ where
             Stroke::new(draw_width, color),
             wire_threshold,
             pick_wire_style(from_r.wire_style, to_r.wire_style),
+            from_r.wire_dashed || to_r.wire_dashed,
         );
     }
 
@@ -1380,6 +1382,7 @@ where
                     Stroke::new(wire_width, to_r.wire_color),
                     wire_threshold,
                     to_r.wire_style,
+                    to_r.wire_dashed,
                 );
             }
         }
@@ -1400,6 +1403,7 @@ where
                     Stroke::new(wire_width, from_r.wire_color),
                     wire_threshold,
                     from_r.wire_style,
+                    from_r.wire_dashed,
                 );
             }
         }
@@ -1602,6 +1606,7 @@ where
                     pos: r.rect.center(),
                     wire_color: wire_info.color,
                     wire_style: wire_info.style,
+                    wire_dashed: wire_info.dashed,
                 },
             );
 
@@ -1771,6 +1776,7 @@ where
                     pos: r.rect.center(),
                     wire_color: wire_info.color,
                     wire_style: wire_info.style,
+                    wire_dashed: wire_info.dashed,
                 },
             );
 

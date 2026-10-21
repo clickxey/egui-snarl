@@ -242,10 +242,12 @@ pub fn draw_wire(
     mut stroke: Stroke,
     threshold: f32,
     style: WireStyle,
+    dashed: bool,
 ) {
     if !ui.is_visible() {
         return;
     }
+    let first_shape = shapes.len();
 
     if stroke.width < 1.0 {
         stroke.color = stroke.color.gamma_multiply(stroke.width);
@@ -282,6 +284,24 @@ pub fn draw_wire(
                 ..args
             };
             draw_axis_aligned(ui, wire, args, stroke, threshold, shapes);
+        }
+    }
+
+    if dashed {
+        // Dashes scale with the wire, so they look the same at any zoom.
+        let dash = stroke.width * 4.0;
+        let gap = stroke.width * 2.5;
+        let drawn: Vec<Shape> = shapes.drain(first_shape..).collect();
+        for shape in drawn {
+            match shape {
+                Shape::Path(path) => {
+                    shapes.extend(Shape::dashed_line(&path.points, stroke, dash, gap));
+                }
+                Shape::LineSegment { points, .. } => {
+                    shapes.extend(Shape::dashed_line(&points, stroke, dash, gap));
+                }
+                other => shapes.push(other),
+            }
         }
     }
 }

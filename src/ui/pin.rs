@@ -31,6 +31,9 @@ pub struct PinWireInfo {
     /// Desired style of the wire.
     /// Zoomed with current scale.
     pub style: WireStyle,
+
+    /// Draw the wire dashed. A wire is dashed when either of its pins asks.
+    pub dashed: bool,
 }
 
 /// Uses `Painter` to draw a pin.
@@ -101,6 +104,9 @@ pub struct PinInfo {
     /// Style of the wire connected to the pin.
     pub wire_style: Option<WireStyle>,
 
+    /// Whether wires connected to the pin are drawn dashed.
+    pub wire_dashed: bool,
+
     /// Custom vertical position of a pin
     pub position: Option<f32>,
 }
@@ -131,6 +137,14 @@ impl PinInfo {
     #[must_use]
     pub const fn with_wire_style(mut self, wire_style: WireStyle) -> Self {
         self.wire_style = Some(wire_style);
+        self
+    }
+
+    /// Draws wires connected to the pin dashed (a wire is dashed when either
+    /// of its pins asks).
+    #[must_use]
+    pub const fn with_wire_dashed(mut self, dashed: bool) -> Self {
+        self.wire_dashed = dashed;
         self
     }
 
@@ -217,6 +231,7 @@ impl PinInfo {
             style: self
                 .wire_style
                 .unwrap_or_else(|| snarl_style.get_wire_style()),
+            dashed: self.wire_dashed,
         }
     }
 }
