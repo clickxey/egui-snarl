@@ -346,6 +346,16 @@ pub trait SnarlViewer<T> {
         let _ = (ui, snarl);
     }
 
+    /// Whether the node has a header at all. Without one, the node is just
+    /// its pins (and body), with no collapse button, drag strip or
+    /// [`Self::show_header`] call; it's dragged by its frame. Defaults to
+    /// `true`.
+    #[inline]
+    fn has_header(&mut self, node: &T) -> bool {
+        let _ = node;
+        true
+    }
+
     /// Whether the node's header shows the collapse button. Defaults to
     /// `true`; the style's `collapsible` turns the button off for all nodes.
     #[inline]

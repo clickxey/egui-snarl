@@ -2060,14 +2060,19 @@ where
             ui.ctx().request_repaint();
         }
 
+        let has_header = viewer.has_header(&snarl[node]);
+        // Space between the header and the pins (none without a header).
+        let header_gap = if has_header {
+            header_frame.total_margin().bottom + ui.spacing().item_spacing.y
+        } else {
+            0.0
+        };
+
         // Pins are placed under the header and must not go outside of the header frame.
         let payload_rect = Rect::from_min_max(
             pos2(
                 node_rect.min.x,
-                node_rect.min.y
-                    + node_state.header_height()
-                    + header_frame.total_margin().bottom
-                    + ui.spacing().item_spacing.y
+                node_rect.min.y + node_state.header_height() + header_gap
                     - node_state.payload_offset(openness),
             ),
             node_rect.max,
@@ -2498,38 +2503,42 @@ where
                 .id_salt("header"),
         );
 
-        header_frame.show(header_ui, |ui: &mut Ui| {
-            ui.with_layout(Layout::left_to_right(Align::Min), |ui| {
-                if style.get_collapsible() && viewer.is_collapsible(&snarl[node]) {
-                    let (_, r) = ui.allocate_exact_size(
-                        vec2(ui.spacing().icon_width, ui.spacing().icon_width),
-                        Sense::click(),
-                    );
-                    paint_default_icon(ui, openness, &r);
+        if has_header {
+            header_frame.show(header_ui, |ui: &mut Ui| {
+                ui.with_layout(Layout::left_to_right(Align::Min), |ui| {
+                    if style.get_collapsible() && viewer.is_collapsible(&snarl[node]) {
+                        let (_, r) = ui.allocate_exact_size(
+                            vec2(ui.spacing().icon_width, ui.spacing().icon_width),
+                            Sense::click(),
+                        );
+                        paint_default_icon(ui, openness, &r);
 
-                    if r.clicked_by(PointerButton::Primary) {
-                        // Toggle node's openness.
-                        snarl.open_node(node, !open);
+                        if r.clicked_by(PointerButton::Primary) {
+                            // Toggle node's openness.
+                            snarl.open_node(node, !open);
+                        }
                     }
-                }
 
-                ui.allocate_exact_size(header_drag_space, Sense::hover());
+                    ui.allocate_exact_size(header_drag_space, Sense::hover());
 
-                viewer.show_header(node, &inputs, &outputs, ui, snarl);
+                    viewer.show_header(node, &inputs, &outputs, ui, snarl);
 
-                header_rect = ui.min_rect();
+                    header_rect = ui.min_rect();
+                });
+
+                header_frame_rect = header_rect + header_frame.total_margin();
+
+                ui.advance_cursor_after_rect(Rect::from_min_max(
+                    header_rect.min,
+                    pos2(
+                        f32::max(header_rect.max.x, node_rect.max.x),
+                        header_rect.min.y,
+                    ),
+                ));
             });
-
-            header_frame_rect = header_rect + header_frame.total_margin();
-
-            ui.advance_cursor_after_rect(Rect::from_min_max(
-                header_rect.min,
-                pos2(
-                    f32::max(header_rect.max.x, node_rect.max.x),
-                    header_rect.min.y,
-                ),
-            ));
-        });
+        } else {
+            header_rect = Rect::from_min_size(node_rect.min, Vec2::ZERO);
+        }
 
         ui.expand_to_include_rect(header_rect);
         let header_size = header_rect.size();
@@ -2537,10 +2546,7 @@ where
 
         node_state.set_size(vec2(
             f32::max(header_size.x, new_pins_size.x),
-            header_size.y
-                + header_frame.total_margin().bottom
-                + ui.spacing().item_spacing.y
-                + new_pins_size.y,
+            header_size.y + header_gap + new_pins_size.y,
         ));
     });
 
