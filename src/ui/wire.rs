@@ -292,7 +292,7 @@ pub fn draw_wire(
         let dash = stroke.width * 4.0;
         let gap = stroke.width * 2.5;
         // A growing phase moves the dashes from the output to the input.
-        let offset = (1.0 - phase.rem_euclid(1.0)) * (dash + gap);
+        let offset = phase.rem_euclid(1.0) * (dash + gap);
         let drawn: Vec<Shape> = shapes.drain(first_shape..).collect();
         for shape in drawn {
             match shape {
