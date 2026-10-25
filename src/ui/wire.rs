@@ -242,7 +242,7 @@ pub fn draw_wire(
     mut stroke: Stroke,
     threshold: f32,
     style: WireStyle,
-    dashed: bool,
+    dashed: Option<f32>,
 ) {
     if !ui.is_visible() {
         return;
@@ -287,18 +287,32 @@ pub fn draw_wire(
         }
     }
 
-    if dashed {
+    if let Some(phase) = dashed {
         // Dashes scale with the wire, so they look the same at any zoom.
         let dash = stroke.width * 4.0;
         let gap = stroke.width * 2.5;
+        // A growing phase moves the dashes from the output to the input.
+        let offset = (1.0 - phase.rem_euclid(1.0)) * (dash + gap);
         let drawn: Vec<Shape> = shapes.drain(first_shape..).collect();
         for shape in drawn {
             match shape {
                 Shape::Path(path) => {
-                    shapes.extend(Shape::dashed_line(&path.points, stroke, dash, gap));
+                    shapes.extend(Shape::dashed_line_with_offset(
+                        &path.points,
+                        stroke,
+                        &[dash],
+                        &[gap],
+                        offset,
+                    ));
                 }
                 Shape::LineSegment { points, .. } => {
-                    shapes.extend(Shape::dashed_line(&points, stroke, dash, gap));
+                    shapes.extend(Shape::dashed_line_with_offset(
+                        &points,
+                        stroke,
+                        &[dash],
+                        &[gap],
+                        offset,
+                    ));
                 }
                 other => shapes.push(other),
             }

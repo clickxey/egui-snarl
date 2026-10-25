@@ -32,8 +32,10 @@ pub struct PinWireInfo {
     /// Zoomed with current scale.
     pub style: WireStyle,
 
-    /// Draw the wire dashed. A wire is dashed when either of its pins asks.
-    pub dashed: bool,
+    /// Draw the wire dashed, with the dashes shifted by this fraction of
+    /// their period (animate it to make the dashes flow). A wire is dashed
+    /// when either of its pins asks.
+    pub dashed: Option<f32>,
 }
 
 /// Uses `Painter` to draw a pin.
@@ -104,8 +106,9 @@ pub struct PinInfo {
     /// Style of the wire connected to the pin.
     pub wire_style: Option<WireStyle>,
 
-    /// Whether wires connected to the pin are drawn dashed.
-    pub wire_dashed: bool,
+    /// Whether wires connected to the pin are drawn dashed, and the dashes'
+    /// shift (a fraction of their period).
+    pub wire_dashed: Option<f32>,
 
     /// Custom vertical position of a pin
     pub position: Option<f32>,
@@ -144,7 +147,16 @@ impl PinInfo {
     /// of its pins asks).
     #[must_use]
     pub const fn with_wire_dashed(mut self, dashed: bool) -> Self {
-        self.wire_dashed = dashed;
+        self.wire_dashed = if dashed { Some(0.0) } else { None };
+        self
+    }
+
+    /// Draws wires connected to the pin dashed, the dashes shifted by
+    /// `phase` (a fraction of their period). Change it every frame to make
+    /// the dashes flow along the wire.
+    #[must_use]
+    pub const fn with_wire_flow(mut self, phase: f32) -> Self {
+        self.wire_dashed = Some(phase);
         self
     }
 

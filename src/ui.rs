@@ -833,7 +833,7 @@ struct PinResponse {
     pos: Pos2,
     wire_color: Color32,
     wire_style: WireStyle,
-    wire_dashed: bool,
+    wire_dashed: Option<f32>,
 }
 
 /// Widget to display [`Snarl`] graph in [`Ui`].
@@ -1200,7 +1200,7 @@ where
             Stroke::new(draw_width, color),
             wire_threshold,
             pick_wire_style(from_r.wire_style, to_r.wire_style),
-            from_r.wire_dashed || to_r.wire_dashed,
+            from_r.wire_dashed.or(to_r.wire_dashed),
         );
     }
 
